@@ -7,14 +7,20 @@ from data_loader import load_and_process_data
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Plastic Recycling Dashboard", layout="wide")
 
-st.title("♻️ Plastic Recycling & Production Dashboard")
+st.title("Plastic Recycling & Production Dashboard")
 st.markdown("""
 ### Data Analysis for Master's Thesis: Circular Economy Rebound Effects
-This dashboard serves as a supplementary visualization tool for my Master's Thesis. 
-It investigates the **Rebound Effects** in the Circular Economy of plastics, analyzing relationships between production, recycling, and economic drivers.
 
-*Data Source: Eurostat & Provided Dataset*
+This dashboard serves as a supplementary visualization tool for the Master's Thesis: **“Does Recycling Reduce Plastic Production? A European Panel Data Analysis of Circular Economy Rebound Effects.”** by **Sina Heckenberger**, Hertie School Master of Public Policy.
+
+The transition from a linear to a circular economy is widely promoted as a key solution to the adverse environmental impacts from plastic production and consumption. This research investigates the potential for **Circular Economy Rebound Effects (CERE)** in plastic recycling in the EU. Circular Economy Rebound effects occur when efficiency gains in recycling might unintendedly drive increased primary plastic production, thereby offsetting the expected environmental benefits. The empirical analysis in this thesis finds preliminary evidence for circular economy rebound effects based on a European panel data analysis of plastic production and recycling volumes and derives policy recommendations accordingly. The full thesis can be viewed [here](https://github.com/sinahecke/plastic-recycling-dashboard/blob/main/Heckenberger_Sina_master_thesis.pdf).
+
+By visualizing relationships between plastic production, recycling rates, and economic drivers like trade volumes and prices across Europe, this dashboard aids the interpretation of the relevant relationships found in the analysis.
+
+*Data Sources: Eurostat*
 """)
+
+
 
 # --- LOAD DATA ---
 @st.cache_data
@@ -53,7 +59,7 @@ filtered_df = df[
 ]
 
 # --- TABS ---
-tab1, tab2, tab3, tab4 = st.tabs(["📈 Trends over Time", "🔗 Correlations", "💰 Economic & Trade", "📊 Distributions"])
+tab1, tab2, tab3, tab4 = st.tabs(["📈 Trends over Time", "🔗 Correlations", "💰 Price and Trade", "📊 Distributions"])
 
 # --- TAB 1: TRENDS ---
 with tab1:
@@ -72,19 +78,23 @@ with tab1:
             y='Production Index (2015=100)', 
             color='geo',
             markers=True,
-            title="Production Index (2015=100)"
+            title="Production Index (2015=100)",
+            labels={'TIME_PERIOD': 'Year', 'geo': 'Country'}
         )
         st.plotly_chart(fig_prod, use_container_width=True)
         
     with col2:
         st.subheader("Recycling Index")
+        # Drop NaNs for this specific metric to ensure lines connect
+        plot_df_rec = filtered_df.dropna(subset=['Recycling Index (2016=100)'])
         fig_rec = px.line(
-            filtered_df, 
+            plot_df_rec, 
             x='TIME_PERIOD', 
             y='Recycling Index (2016=100)', 
             color='geo', 
             markers=True,
-            title="Recycling Index (2016=100)"
+            title="Recycling Index (2016=100)",
+            labels={'TIME_PERIOD': 'Year', 'geo': 'Country'}
         )
         st.plotly_chart(fig_rec, use_container_width=True)
 
@@ -101,7 +111,8 @@ with tab1:
         y=metric_choice,
         color='geo',
         markers=True,
-        title=f"{metric_choice} over Time"
+        title=f"{metric_choice} over Time",
+        labels={'TIME_PERIOD': 'Year', 'geo': 'Country'}
     )
     st.plotly_chart(fig_metric, use_container_width=True)
 
@@ -140,13 +151,14 @@ with tab2:
         hover_data=['TIME_PERIOD'],
         log_x=log_x,
         log_y=log_y,
-        title=f"Scatter Plot: {y_axis} vs {x_axis}"
+        title=f"Scatter Plot: {y_axis} vs {x_axis}",
+        labels={'geo': 'Country'}
     )
     st.plotly_chart(fig_scatter, use_container_width=True)
 
 # --- TAB 3: ECONOMIC & TRADE ---
 with tab3:
-    st.header("Economic & Trade Analysis")
+    st.header("Price and Trade Analysis")
     
     # Prices
     st.subheader("Primary Plastic Price Index (2015=100)")
@@ -161,7 +173,8 @@ with tab3:
             y='Price Index (2015=100)',
             color='geo', 
             markers=True,
-            title="Producer Prices of Plastic in Primary Forms"
+            title="Producer Prices of Plastic in Primary Forms",
+            labels={'TIME_PERIOD': 'Year', 'geo': 'Country'}
         )
         st.plotly_chart(fig_prices, use_container_width=True)
     else:
@@ -181,7 +194,8 @@ with tab3:
                 x='TIME_PERIOD',
                 y='Import Quantity (100kg)',
                 color='partner', # usually 'Extra-EU'
-                title="Imports of Plastic Waste to EU (Extra-EU)"
+                title="Imports of Plastic Waste to EU (Extra-EU)",
+                labels={'TIME_PERIOD': 'Month'}
             )
             st.plotly_chart(fig_imports, use_container_width=True)
     
@@ -202,7 +216,8 @@ with tab3:
                     y='Export Quantity (100kg)',
                     color='geo',
                     barmode='group',
-                    title="Exports of Plastic Waste"
+                    title="Exports of Plastic Waste",
+                    labels={'TIME_PERIOD': 'Year', 'geo': 'Country'}
                 )
                 st.plotly_chart(fig_exports, use_container_width=True)
             else:
@@ -217,14 +232,15 @@ with tab4:
         numeric_columns
     )
     
-    # Violin plot is much more intuitive than box plot for some, showing density
-    fig_violin = px.violin(
+    # Classic Box Plot for statistical summary
+    fig_dist = px.box(
         filtered_df,
         x='geo',
         y=dist_metric,
         color='geo',
-        box=True, # Show box plot inside
         points="all", # Show all points
-        title=f"Distribution of {dist_metric} by Country"
+        title=f"Distribution of {dist_metric} by Country",
+        labels={'geo': 'Country'}
     )
-    st.plotly_chart(fig_violin, use_container_width=True)
+        
+    st.plotly_chart(fig_dist, use_container_width=True)

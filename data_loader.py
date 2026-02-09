@@ -105,7 +105,8 @@ def load_and_process_data():
 
     # Imports (Monthly)
     try:
-        imports = pd.read_csv(os.path.join(DATA_DIR, "estat_plastic_imports_ EU.csv"))
+        # Trailing comma in CSV causes pandas to shift columns if index_col is not False
+        imports = pd.read_csv(os.path.join(DATA_DIR, "estat_plastic_imports_ EU.csv"), index_col=False)
         # Columns: DATAFLOW,LAST UPDATE,freq,reporter,partner,product,flow,indicators,TIME_PERIOD,OBS_VALUE
         imports = imports[['TIME_PERIOD', 'OBS_VALUE', 'partner', 'product']]
         imports['TIME_PERIOD'] = pd.to_datetime(imports['TIME_PERIOD'])
@@ -116,7 +117,8 @@ def load_and_process_data():
 
     # Exports (Annual)
     try:
-        exports = pd.read_csv(os.path.join(DATA_DIR, "estat_ds-plastic export quantity.csv"))
+        # Trailing comma in CSV causes pandas to shift columns if index_col is not False
+        exports = pd.read_csv(os.path.join(DATA_DIR, "estat_ds-plastic export quantity.csv"), index_col=False)
         # Columns: ... reporter, partner, TIME_PERIOD, OBS_VALUE
         exports = exports[['reporter', 'TIME_PERIOD', 'OBS_VALUE']]
         
